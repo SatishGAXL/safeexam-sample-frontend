@@ -1,4 +1,4 @@
-import "./App.css";
+import "./assets/App.css";
 import { useEffect, useState } from "react";
 import { message } from "antd";
 import {
@@ -11,28 +11,42 @@ import {
 import { Button, Form, Input, Space } from "antd";
 import axios from "axios";
 
+// Ant Design layout configuration for form alignment
 const layout = {
   labelCol: { span: 8 },
   wrapperCol: { span: 16 },
 };
 
+// Layout configuration for form buttons
 const tailLayout = {
   wrapperCol: { offset: 8, span: 16 },
 };
 
+/**
+ * Main application component for Safe Exam system
+ * Manages wallet connection and exam answer submission
+ */
 function App() {
+  // Initialize Ant Design message API for notifications
   const [messageApi, contextHolder] = message.useMessage();
+  // State to store the connected wallet address
   const [address, setAddress] = useState("");
 
+  /**
+   * Handles wallet connection
+   * Either retrieves existing wallet from localStorage or creates a new one
+   */
   async function connectWallet() {
     const retrievedAddress = window.localStorage.getItem("safeexam-address");
     if (retrievedAddress) {
+      // Use existing wallet if found in localStorage
       success(
         messageApi,
         `Wallet Already Exists\nConnected to ${retrievedAddress}`
       );
       setAddress(retrievedAddress);
     } else {
+      // Create new wallet if none exists
       const key = generateRandomString(10);
       openMessage(messageApi, key, "Wallet not Found\nCreating new Wallet");
       const res = await axios.post(`${backendUrl}/create-wallet`);
@@ -50,12 +64,20 @@ function App() {
       }
     }
   }
+
+  // Connect wallet on component mount
   useEffect(() => {
     connectWallet();
   }, []);
 
+  // Initialize form instance
   const [form] = Form.useForm();
 
+  /**
+   * Handles form submission
+   * Writes exam answer data to blockchain via backend API
+   * @param {Object} values - Form values containing exam answer details
+   */
   const onFinish = (values: any) => {
     console.log(values);
     const key = generateRandomString(10);
@@ -68,6 +90,7 @@ function App() {
         })
         .then((res) => {
           if (res.status === 200) {
+            // On successful transaction, show hash and open blockchain explorer
             closeMessage(
               messageApi,
               key,
@@ -91,6 +114,9 @@ function App() {
     }
   };
 
+  /**
+   * Resets all form fields to their initial state
+   */
   const onReset = () => {
     form.resetFields();
   };
@@ -98,13 +124,15 @@ function App() {
   return (
     <>
       <div className="mainWrapper">
+        {/* Conditional rendering based on wallet connection status */}
         {address != "" ? (
           <main>
             <h1 style={{ textAlign: "center" }}>Safe Exam</h1>
             <h4 style={{ textAlign: "center" }}>Connected to {address}</h4>
+            {/* Button to reset wallet connection */}
             <Button
               type="primary"
-              style={{ margin: "20px auto",display:"flex" }}
+              style={{ margin: "20px auto", display: "flex" }}
               onClick={() => {
                 window.localStorage.removeItem("safeexam-address");
                 setAddress("");
@@ -114,6 +142,7 @@ function App() {
               Disconnect & Connect to New Wallet
             </Button>
             <h2 style={{ textAlign: "center" }}>Write Answer</h2>
+            {/* Exam answer submission form */}
             <Form
               {...layout}
               form={form}
@@ -121,6 +150,7 @@ function App() {
               onFinish={onFinish}
               style={{ maxWidth: 600, margin: "20px auto" }}
             >
+              {/* Form fields for exam details */}
               <Form.Item
                 name="booklet"
                 label="Booklet"
@@ -202,6 +232,7 @@ function App() {
                 <Input />
               </Form.Item>
 
+              {/* Form submission and reset buttons */}
               <Form.Item {...tailLayout}>
                 <Space>
                   <Button type="primary" htmlType="submit">
